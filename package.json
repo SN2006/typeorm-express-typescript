@@ -1,6 +1,6 @@
 {
   "name": "express-typescript-typeorm-boilerplate",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "RESTful API boilerplate with Typescript, TypeORM, ExpressJs & Mocha.",
   "scripts": {
     "dev": "debug=* NODE_PATH=./src ts-node-dev --respawn ./src/index.ts",

@@ -1,17 +1,147 @@
-# TypeORM / Express / TypeScript RESTful API boilerplate
+# Task Management API
 
-[![CI][build-badge]][build-url]
-[![TypeScript][typescript-badge]][typescript-url]
-[![prettier][prettier-badge]][prettier-url]
-![Heisenberg](misc/heisenberg.png)
+RESTful API for task management built with TypeScript, Express, and TypeORM.
 
-Boilerplate with focus on best practices and painless developer experience:
+## Entities Description
 
-- Minimal setup that can be extended 🔧
-- Spin it up with single command 🌀
-- TypeScript first
-- RESTful APIs
-- JWT authentication with role based authorization
+### User
+
+User entity represents system users with authentication and authorization capabilities.
+
+**Fields:**
+
+- `id` - Unique identifier (auto-generated)
+- `email` - User's email (unique, required)
+- `password` - Hashed password (required)
+- `username` - User's username (unique, optional)
+- `name` - User's full name (optional)
+- `role` - User role: `STANDARD` or `ADMINISTRATOR` (default: `STANDARD`)
+- `language` - Preferred language (default: `en-US`)
+- `created_at` - Account creation timestamp
+- `updated_at` - Last update timestamp
+
+**Relationships:**
+
+- One user can have many States (one-to-many)
+- One user can have many TaskTypes (one-to-many)
+- One user can have many Tasks (one-to-many)
+
+### State
+
+State entity represents task statuses (e.g., "To Do", "In Progress", "Done"). Each user can create their own custom states.
+
+**Fields:**
+
+- `id` - Unique identifier (auto-generated)
+- `name` - State name (max 100 characters, required)
+- `userId` - Reference to the owner user
+- `created_at` - Creation timestamp
+- `updated_at` - Last update timestamp
+
+**Relationships:**
+
+- Many-to-one with User (each state belongs to one user)
+
+### TaskType
+
+TaskType entity represents task categories or types (e.g., "Bug", "Feature", "Documentation"). Each user can create their own custom task types.
+
+**Fields:**
+
+- `id` - Unique identifier (auto-generated)
+- `name` - Task type name (max 100 characters, required)
+- `userId` - Reference to the owner user
+- `created_at` - Creation timestamp
+- `updated_at` - Last update timestamp
+
+**Relationships:**
+
+- Many-to-one with User (each task type belongs to one user)
+
+### Task
+
+Task entity represents individual tasks with all their details.
+
+**Fields:**
+
+- `id` - Unique identifier (auto-generated)
+- `title` - Task title (max 200 characters, required)
+- `description` - Task description (optional)
+- `priority` - Task priority: `LOW`, `MEDIUM`, or `HIGH` (required)
+- `userId` - Reference to the owner user (auto-assigned, cannot be changed)
+- `stateId` - Reference to the task's state (required, must belong to user)
+- `taskTypeId` - Reference to the task's type (required, must belong to user)
+- `dueDate` - Task due date (required)
+- `created_at` - Creation timestamp
+- `updated_at` - Last update timestamp
+
+**Relationships:**
+
+- Many-to-one with User (each task belongs to one user)
+- Many-to-one with State (each task has one state)
+- Many-to-one with TaskType (each task has one type)
+
+**Validation Rules:**
+
+- When creating a task, all fields except `description` are required
+- `stateId` and `taskTypeId` must reference entities that belong to the authenticated user
+- `userId` is automatically assigned from JWT token and cannot be modified
+
+## API Endpoints
+
+Base URL: `/api/v1`
+
+### Authentication Endpoints
+
+| Method | Endpoint                | Description             | Authentication |
+| ------ | ----------------------- | ----------------------- | -------------- |
+| POST   | `/auth/register`        | Register a new user     | No             |
+| POST   | `/auth/login`           | Login and get JWT token | No             |
+| POST   | `/auth/change-password` | Change user password    | Required       |
+
+### User Endpoints
+
+| Method | Endpoint     | Description    | Authentication | Authorization                |
+| ------ | ------------ | -------------- | -------------- | ---------------------------- |
+| GET    | `/users`     | Get all users  | Required       | Any                          |
+| GET    | `/users/:id` | Get user by ID | Required       | Any                          |
+| PATCH  | `/users/:id` | Update user    | Required       | ADMINISTRATOR or own profile |
+| DELETE | `/users/:id` | Delete user    | Required       | ADMINISTRATOR or own profile |
+
+### State Endpoints
+
+| Method | Endpoint      | Description               | Authentication        |
+| ------ | ------------- | ------------------------- | --------------------- |
+| GET    | `/states`     | Get all states            | Required              |
+| GET    | `/states/my`  | Get current user's states | Required              |
+| GET    | `/states/:id` | Get state by ID           | Required              |
+| POST   | `/states`     | Create new state          | Required              |
+| PATCH  | `/states/:id` | Update state              | Required (owner only) |
+| DELETE | `/states/:id` | Delete state              | Required (owner only) |
+
+### Task Type Endpoints
+
+| Method | Endpoint          | Description                   | Authentication        |
+| ------ | ----------------- | ----------------------------- | --------------------- |
+| GET    | `/task-types`     | Get all task types            | Required              |
+| GET    | `/task-types/my`  | Get current user's task types | Required              |
+| GET    | `/task-types/:id` | Get task type by ID           | Required              |
+| POST   | `/task-types`     | Create new task type          | Required              |
+| PATCH  | `/task-types/:id` | Update task type              | Required (owner only) |
+| DELETE | `/task-types/:id` | Delete task type              | Required (owner only) |
+
+### Task Endpoints
+
+| Method | Endpoint     | Description              | Authentication        |
+| ------ | ------------ | ------------------------ | --------------------- |
+| GET    | `/tasks`     | Get all tasks            | Required              |
+| GET    | `/tasks/my`  | Get current user's tasks | Required              |
+| GET    | `/tasks/:id` | Get task by ID           | Required              |
+| POST   | `/tasks`     | Create new task          | Required              |
+| PATCH  | `/tasks/:id` | Update task              | Required (owner only) |
+| DELETE | `/tasks/:id` | Delete task              | Required (owner only) |
+
+**Note:** All endpoints require JWT authentication except registration and login. Include the JWT token in the `Authorization` header as `Bearer <token>`.
 
 ## Requirements
 
@@ -22,62 +152,35 @@ Boilerplate with focus on best practices and painless developer experience:
 
 _Easily set up a local development environment with single command!_
 
-- clone the repo
+- Clone the repo
 - `npm run docker:dev` 🚀
 
 Visit [localhost:4000](http://localhost:4000/) or if using Postman grab [config](/postman).
 
-### _What happened_ 💥
+### What happened 💥
 
 Containers created:
 
-- Postgres database container seeded with 💊 Breaking Bad characters in `Users` table (default credentials `user=walter`, `password=white` in [.env file](./.env))
-- Node (v16 Alpine) container with running boilerplate RESTful API service
-- and one Node container instance to run tests locally or in CI
+- Postgres database container
+- Node (v16 Alpine) container with running RESTful API service
+- Node container instance to run tests locally or in CI
 
-## Features:
+## Features
 
 - [Express](https://github.com/expressjs/express) framework
 - [TypeScript v4](https://github.com/microsoft/TypeScript) codebase
 - [TypeORM](https://typeorm.io/) using Data Mapper pattern
-- [Docker](https://www.docker.com/) environment:
-  - Easily start local development using [Docker Compose](https://docs.docker.com/compose/) with single command `npm run docker:dev`
-  - Connect to different staging or production environments `npm run docker:[stage|prod]`
-  - Ready for **microservices** development and deployment.  
-    Once API changes are made, just build and push new docker image with your favourite CI/CD tool  
-    `docker build -t <username>/api-boilerplate:latest .`  
-    `docker push <username>/api-boilerplate:latest`
-  - Run unit, integration (or setup with your frontend E2E) tests as `docker exec -ti be_boilerplate_test sh` and `npm run test`
-- Contract first REST API design:
-  - never break API again with HTTP responses and requests payloads using [type definitions](./src/types/express/index.d.ts)
-  - Consistent schema error [response](./src/utils/response/custom-error/types.ts). Your frontend will always know how to handle errors thrown in `try...catch` statements 💪
-- JWT authentication and role based authorization using custom middleware
-- Set local, stage or production [environmental variables](./config) with [type definitions](./src/types/ProcessEnv.d.ts)
-- Logging with [morgan](https://github.com/expressjs/morgan)
+- [Docker](https://www.docker.com/) environment
+- JWT authentication and role-based authorization
+- Request validation middleware
+- Consistent error response schema
 - Unit and integration tests with [Mocha](https://mochajs.org/) and [Chai](https://www.chaijs.com/)
 - Linting with [ESLint](https://eslint.org/)
 - [Prettier](https://prettier.io/) code formatter
 - Git hooks with [Husky](https://github.com/typicode/husky) and [lint-staged](https://github.com/okonet/lint-staged)
-- Automated npm & Docker dependency updates with [Renovate](https://github.com/renovatebot/renovate) (set to patch version only)
-- Commit messages must meet [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) format.  
-  After staging changes just run `npm run commit` and get instant feedback on your commit message formatting and be prompted for required fields by [Commitizen](https://github.com/commitizen/cz-cli)
 
-## Other awesome boilerplates:
+## Practical Work Reports
 
-Each boilerplate comes with it's own flavor of libraries and setup, check out others:
+This section contains detailed reports and documentation for practical assignments:
 
-- [Express and TypeORM with TypeScript](https://github.com/typeorm/typescript-express-example)
-- [Node.js, Express.js & TypeScript Boilerplate for Web Apps](https://github.com/jverhoelen/node-express-typescript-boilerplate)
-- [Express boilerplate for building RESTful APIs](https://github.com/danielfsousa/express-rest-es2017-boilerplate)
-- [A delightful way to building a RESTful API with NodeJs & TypeScript by @w3tecch](https://github.com/w3tecch/express-typescript-boilerplate)
-
-[build-badge]: https://github.com/mkosir/express-typescript-typeorm-boilerplate/actions/workflows/main.yml/badge.svg
-[build-url]: https://github.com/mkosir/express-typescript-typeorm-boilerplate/actions/workflows/main.yml
-[typescript-badge]: https://badges.frapsoft.com/typescript/code/typescript.svg?v=101
-[typescript-url]: https://github.com/microsoft/TypeScript
-[prettier-badge]: https://img.shields.io/badge/code_style-prettier-ff69b4.svg
-[prettier-url]: https://github.com/prettier/prettier
-
-## Contributing
-
-All contributions are welcome!
+- [Workshop 5](workshop_reports/workshop5/WORKSHOP_5.md) - Expanding the API

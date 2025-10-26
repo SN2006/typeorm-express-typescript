@@ -1,5 +1,9 @@
 import bcrypt from 'bcryptjs';
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+
+import { State } from '../states/State';
+import { Task } from '../tasks/Task';
+import { TaskType } from '../taskTypes/TaskType';
 
 import { Role, Language } from './types';
 
@@ -46,6 +50,15 @@ export class User {
   @Column()
   @UpdateDateColumn()
   updated_at: Date;
+
+  @OneToMany(() => Task, (task) => task.user)
+  tasks: Task[];
+
+  @OneToMany(() => TaskType, (taskType) => taskType.user)
+  taskTypes: TaskType[];
+
+  @OneToMany(() => State, (state) => state.user)
+  states: State[];
 
   setLanguage(language: Language) {
     this.language = language;

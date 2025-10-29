@@ -7,3 +7,4 @@ apk add --update bash
 npm run migration:run
 npm run seed:run
 npm run dev
+

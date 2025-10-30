@@ -1,29 +1,18 @@
 import { Request, Response, NextFunction } from 'express';
-import { getRepository } from 'typeorm';
 
-import { TaskType } from 'orm/entities/taskTypes/TaskType';
-import { CustomError } from 'utils/response/custom-error/CustomError';
+import { UpdateTaskTypeDTO } from '../../dto/taskType/UpdateTaskTypeDTO';
+import TaskTypeService from '../../services/TaskTypeService';
 
 export const create = async (req: Request, res: Response, next: NextFunction) => {
   const { name } = req.body;
   const userId = req.jwtPayload.id;
 
-  const taskTypeRepository = getRepository(TaskType);
+  const taskTypeService = new TaskTypeService();
 
   try {
-    const taskType = new TaskType();
-    taskType.name = name;
-    taskType.userId = userId;
-
-    try {
-      await taskTypeRepository.save(taskType);
-      res.customSuccess(201, 'TaskType successfully created.', taskType);
-    } catch (err) {
-      const customError = new CustomError(400, 'Raw', `TaskType can't be created.`, null, err);
-      return next(customError);
-    }
+    const createdTaskType = await taskTypeService.create(name, userId);
+    res.customSuccess(201, 'TaskType successfully created.', new UpdateTaskTypeDTO(createdTaskType));
   } catch (err) {
-    const customError = new CustomError(400, 'Raw', 'Error', null, err);
-    return next(customError);
+    return next(err);
   }
 };

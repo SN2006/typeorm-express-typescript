@@ -1,26 +1,16 @@
 import { Request, Response, NextFunction } from 'express';
-import { getRepository } from 'typeorm';
 
-import { State } from 'orm/entities/states/State';
-import { CustomError } from 'utils/response/custom-error/CustomError';
+import { StateDTO } from '../../dto/state/StateDTO';
+import StateService from '../../services/StateService';
 
 export const show = async (req: Request, res: Response, next: NextFunction) => {
   const id = req.params.id;
+  const stateService = new StateService();
 
-  const stateRepository = getRepository(State);
   try {
-    const state = await stateRepository.findOne(id, {
-      relations: ['user'],
-      select: ['id', 'name', 'created_at', 'updated_at'],
-    });
-
-    if (!state) {
-      const customError = new CustomError(404, 'General', `State with id:${id} not found.`, ['State not found.']);
-      return next(customError);
-    }
-    res.customSuccess(200, 'State found', state);
+    const state = await stateService.getStateById(id);
+    res.customSuccess(200, 'State found', new StateDTO(state));
   } catch (err) {
-    const customError = new CustomError(400, 'Raw', 'Error', null, err);
-    return next(customError);
+    return next(err);
   }
 };

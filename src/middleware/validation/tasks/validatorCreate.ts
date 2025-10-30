@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
-import { getRepository } from 'typeorm';
 
-import { State } from 'orm/entities/states/State';
-import { TaskType } from 'orm/entities/taskTypes/TaskType';
 import { CustomError } from 'utils/response/custom-error/CustomError';
 import { ErrorValidation } from 'utils/response/custom-error/types';
+
+import StateService from '../../../services/StateService';
+import TaskTypeService from '../../../services/TaskTypeService';
 
 export const validatorCreate = async (req: Request, res: Response, next: NextFunction) => {
   let { title } = req.body;
@@ -32,12 +32,12 @@ export const validatorCreate = async (req: Request, res: Response, next: NextFun
     errorsValidation.push({ stateId: 'State ID is required' });
   } else {
     try {
-      const stateRepository = getRepository(State);
-      const state = await stateRepository.findOne({ where: { id: stateId } });
+      const stateService = new StateService();
+      const state = await stateService.getStateById(stateId);
 
       if (!state) {
         errorsValidation.push({ stateId: `State with id:${stateId} not found` });
-      } else if (state.userId !== userId) {
+      } else if (state.user.id !== userId) {
         errorsValidation.push({ stateId: 'State must belong to you' });
       }
     } catch (err) {
@@ -49,12 +49,12 @@ export const validatorCreate = async (req: Request, res: Response, next: NextFun
     errorsValidation.push({ taskTypeId: 'Task Type ID is required' });
   } else {
     try {
-      const taskTypeRepository = getRepository(TaskType);
-      const taskType = await taskTypeRepository.findOne({ where: { id: taskTypeId } });
+      const taskTypeService = new TaskTypeService();
+      const taskType = await taskTypeService.show(taskTypeId);
 
       if (!taskType) {
         errorsValidation.push({ taskTypeId: `TaskType with id:${taskTypeId} not found` });
-      } else if (taskType.userId !== userId) {
+      } else if (taskType.user.id !== userId) {
         errorsValidation.push({ taskTypeId: 'TaskType must belong to you' });
       }
     } catch (err) {

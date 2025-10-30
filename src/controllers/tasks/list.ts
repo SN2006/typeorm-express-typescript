@@ -1,19 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
-import { getRepository } from 'typeorm';
 
-import { Task } from 'orm/entities/tasks/Task';
-import { CustomError } from 'utils/response/custom-error/CustomError';
+import { TaskDTO } from '../../dto/task/TaskDTO';
+import TaskService from '../../services/TaskService';
 
 export const list = async (req: Request, res: Response, next: NextFunction) => {
-  const taskRepository = getRepository(Task);
+  const taskService = new TaskService();
   try {
-    const tasks = await taskRepository.find({
-      relations: ['user', 'state', 'taskType'],
-      select: ['id', 'title', 'description', 'priority', 'dueDate', 'created_at', 'updated_at'],
-    });
+    const tasks = (await taskService.getAll()).map((task) => new TaskDTO(task));
     res.customSuccess(200, 'List of tasks.', tasks);
   } catch (err) {
-    const customError = new CustomError(400, 'Raw', `Can't retrieve list of tasks.`, null, err);
-    return next(customError);
+    return next(err);
   }
 };

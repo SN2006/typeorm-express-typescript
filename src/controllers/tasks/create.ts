@@ -1,34 +1,29 @@
 import { Request, Response, NextFunction } from 'express';
-import { getRepository } from 'typeorm';
 
-import { Task } from 'orm/entities/tasks/Task';
-import { CustomError } from 'utils/response/custom-error/CustomError';
+import { CreateTaskRequestDTO } from '../../dto/task/CreateTaskRequestDTO';
+import { SavedTaskResponseDTO } from '../../dto/task/SavedTaskResponseDTO';
+import TaskService from '../../services/TaskService';
 
 export const create = async (req: Request, res: Response, next: NextFunction) => {
   const { title, description, priority, stateId, taskTypeId, dueDate } = req.body;
   const userId = req.jwtPayload.id;
 
-  const taskRepository = getRepository(Task);
+  const taskService = new TaskService();
 
   try {
-    const task = new Task();
-    task.title = title;
-    task.description = description;
-    task.priority = priority;
-    task.userId = userId;
-    task.stateId = stateId;
-    task.taskTypeId = taskTypeId;
-    task.dueDate = new Date(dueDate);
+    const createTaskRequestDTO = new CreateTaskRequestDTO(
+      title,
+      description,
+      priority,
+      userId,
+      stateId,
+      taskTypeId,
+      dueDate,
+    );
+    const savedTask = await taskService.create(createTaskRequestDTO);
 
-    try {
-      await taskRepository.save(task);
-      res.customSuccess(201, 'Task successfully created.', task);
-    } catch (err) {
-      const customError = new CustomError(400, 'Raw', `Task can't be created.`, null, err);
-      return next(customError);
-    }
+    res.customSuccess(201, 'Task successfully created.', new SavedTaskResponseDTO(savedTask));
   } catch (err) {
-    const customError = new CustomError(400, 'Raw', 'Error', null, err);
-    return next(customError);
+    return next(err);
   }
 };

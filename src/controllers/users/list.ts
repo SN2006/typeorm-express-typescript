@@ -1,18 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
-import { getRepository } from 'typeorm';
 
-import { User } from 'orm/entities/users/User';
-import { CustomError } from 'utils/response/custom-error/CustomError';
+import { ListedUserDTO } from '../../dto/user/ListedUserDTO';
+import { UserService } from '../../services/UserService';
 
 export const list = async (req: Request, res: Response, next: NextFunction) => {
-  const userRepository = getRepository(User);
+  const userService = new UserService();
   try {
-    const users = await userRepository.find({
-      select: ['id', 'username', 'name', 'email', 'role', 'language', 'created_at', 'updated_at'],
-    });
+    const users = await userService.list().then((users) => users.map((user) => new ListedUserDTO(user)));
     res.customSuccess(200, 'List of users.', users);
   } catch (err) {
-    const customError = new CustomError(400, 'Raw', `Can't retrieve list of users.`, null, err);
-    return next(customError);
+    return next(err);
   }
 };

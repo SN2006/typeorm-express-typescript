@@ -1,26 +1,17 @@
 import { Request, Response, NextFunction } from 'express';
-import { getRepository } from 'typeorm';
 
-import { User } from 'orm/entities/users/User';
-import { CustomError } from 'utils/response/custom-error/CustomError';
+import { UserDTO } from '../../dto/user/UserDTO';
+import { UserService } from '../../services/UserService';
 
 export const show = async (req: Request, res: Response, next: NextFunction) => {
   const id = req.params.id;
 
-  const userRepository = getRepository(User);
+  const userService = new UserService();
   try {
-    const user = await userRepository.findOne(id, {
-      relations: ['tasks', 'taskTypes', 'states'],
-      select: ['id', 'username', 'name', 'email', 'role', 'language', 'created_at', 'updated_at'],
-    });
+    const user = await userService.show(id);
 
-    if (!user) {
-      const customError = new CustomError(404, 'General', `User with id:${id} not found.`, ['User not found.']);
-      return next(customError);
-    }
-    res.customSuccess(200, 'User found', user);
+    res.customSuccess(200, 'User found', new UserDTO(user));
   } catch (err) {
-    const customError = new CustomError(400, 'Raw', 'Error', null, err);
-    return next(customError);
+    return next(err);
   }
 };

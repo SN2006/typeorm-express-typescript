@@ -30,7 +30,7 @@ export const validatorEdit = async (req: Request, res: Response, next: NextFunct
 
       if (!state) {
         errorsValidation.push({ stateId: `State with id:${stateId} not found` });
-      } else if (state.userId !== userId) {
+      } else if (state.user.id !== userId) {
         errorsValidation.push({ stateId: 'State must belong to you' });
       }
     } catch (err) {
@@ -45,7 +45,7 @@ export const validatorEdit = async (req: Request, res: Response, next: NextFunct
 
       if (!taskType) {
         errorsValidation.push({ taskTypeId: `TaskType with id:${taskTypeId} not found` });
-      } else if (taskType.userId !== userId) {
+      } else if (taskType.user.id !== userId) {
         errorsValidation.push({ taskTypeId: 'TaskType must belong to you' });
       }
     } catch (err) {

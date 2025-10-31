@@ -184,3 +184,4 @@ Containers created:
 This section contains detailed reports and documentation for practical assignments:
 
 - [Workshop 5](workshop_reports/workshop5/WORKSHOP_5.md) - Expanding the API
+- [Workshop 6](workshop_reports/workshop6/WORKSHOP_6.md) - Expanding the API

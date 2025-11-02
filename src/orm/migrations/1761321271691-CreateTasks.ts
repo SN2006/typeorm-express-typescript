@@ -54,12 +54,12 @@ export class CreateTasks1761321271691 implements MigrationInterface {
     await queryRunner.query(`
             ALTER TABLE "tasks"
             ADD CONSTRAINT "FK_ea76a982cfc3dd4bff34daaf036" FOREIGN KEY ("task_type_id") REFERENCES "task_types"("id") ON DELETE
-            SET NULL ON UPDATE NO ACTION
+            CASCADE ON UPDATE NO ACTION
         `);
     await queryRunner.query(`
             ALTER TABLE "tasks"
             ADD CONSTRAINT "FK_f717afec5dc59f63d20689732b4" FOREIGN KEY ("state_id") REFERENCES "states"("id") ON DELETE
-            SET NULL ON UPDATE NO ACTION
+            CASCADE ON UPDATE NO ACTION
         `);
   }
 

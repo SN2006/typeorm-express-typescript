@@ -34,13 +34,13 @@ export class Task {
   @Column()
   userId: number;
 
-  @ManyToOne(() => TaskType, { onDelete: 'SET NULL', nullable: true })
+  @ManyToOne(() => TaskType, { onDelete: 'CASCADE' })
   taskType: TaskType;
 
   @Column({ nullable: true })
   taskTypeId: number;
 
-  @ManyToOne(() => State, { onDelete: 'SET NULL', nullable: true })
+  @ManyToOne(() => State, { onDelete: 'CASCADE' })
   state: State;
 
   @Column({ nullable: true })
